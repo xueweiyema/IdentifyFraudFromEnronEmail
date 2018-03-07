@@ -27,6 +27,10 @@ person_df.replace('NaN',np.nan,inplace=True)
 ### Task 2: Remove outliers
 
 person_df.drop(['TOTAL'],inplace=True)
+person_df.drop(['LOCKHART EUGENE E'],inplace=True)
+person_df.drop(['THE TRAVEL AGENCY IN THE PARK'],inplace=True)
+
+
 ### Task 3: Create new feature(s)
 
 person_df.drop(['email_address','deferral_payments','deferred_income','director_fees','loan_advances','long_term_incentive','restricted_stock_deferred'],axis=1, inplace=True)
@@ -76,8 +80,6 @@ person_df['total_stock_value'].fillna(person_df['total_stock_value'].mean(),inpl
 
 
 
-
-
 ### Store to my_dataset for easy export below.
 my_dataset = person_df.to_dict(orient ='index')
 
@@ -92,6 +94,7 @@ labels, features = targetFeatureSplit(data)
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
 # Provided to give you a starting point. Try a variety of classifiers.
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
 clf = GaussianNB()
 
@@ -104,7 +107,6 @@ clf = GaussianNB()
 
 # Example starting point. Try investigating other evaluation techniques!
 from sklearn.model_selection import GridSearchCV
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import KFold, train_test_split
 
 X_train, X_test, y_train, y_test = train_test_split(
@@ -134,4 +136,17 @@ dtclf=DecisionTreeClassifier(class_weight=None, criterion='gini', max_depth=None
             min_weight_fraction_leaf=0.0, presort=False, random_state=None,
             splitter='best')
 test_classifier(dtclf, person_df.to_dict(orient ='index'), features_list)
-dump_classifier_and_data(clf, my_dataset, features_list)
+dump_classifier_and_data(dtclf, my_dataset, features_list)
+
+#features selected test
+from sklearn.feature_selection import SelectFromModel
+model = SelectFromModel(dtclf, threshold='1.25*mean',prefit=True)
+X_new = model.transform(features)
+X_new.shape[1]
+print model.get_support(True)
+for i in model.get_support(True):
+    print features_list[i+1]
+
+features_list_selected=['poi','exercised_stock_options','shared_receipt_with_poi','from_ratio']
+test_classifier(dtclf, person_df.to_dict(orient ='index'), features_list_selected)
+dump_classifier_and_data(dtclf, my_dataset, features_list_selected)
